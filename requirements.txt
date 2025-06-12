@@ -1,0 +1,4 @@
+# whisper-colab-transcribe/requirements.txt
+git+https://github.com/openai/whisper.git
+soundfile
+ffmpeg-python
