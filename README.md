@@ -1,30 +1,88 @@
-# 🎙️ Whisper Colab Transcribe
+# 🎙️ Whisper Colab & CLI Transcriber
 
-Google Colab で **1 セル実行 → 日本語音声を JSON / TXT に文字起こし**  
-ノイズ除去（High-pass / Low-pass）＋ 5 分刻み分割に対応します。
+**Whisper Colab Transcribe** は、OpenAI Whisper と FFmpeg を使って **完全無料で** 日本語音声を高速かつ手軽に文字起こしできるツールです。Google Colab でもローカル CLI でも同じスクリプトで動作し、ノイズ除去・長時間ファイル分割・タイムスタンプ付き JSON/TXT の同時出力をワンコマンドで実現します。
 
-## Demo (Open in Colab)
+---
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/<ユーザ名>/whisper-colab-transcribe/blob/main/colab_notebook.ipynb)
+## ✨ 主な機能
 
-## Features
+| 機能      | 説明                                                        |
+| ------- | --------------------------------------------------------- |
+| ノイズ除去   | `ffmpeg` の `highpass` / `lowpass` フィルタで 100–8000 Hz 帯域を抽出 |
+| 分割処理    | 5 分 (= 300 秒) ごとに音声を分割／並列化することで長時間ファイルも安定処理               |
+| 自動モデル切替 | 指定モデルが VRAM 不足なら `small` へフォールバック                         |
+| 出力形式    | `<base>.json` (タイムタグ付セグメント) & `<base>.txt` (全文)           |
+| 詳細ログ    | `-v/--verbose` で FFmpeg / Whisper の stderr を表示            |
 
-| 機能 | 説明 |
-|---|---|
-| ノイズ除去 | `ffmpeg` で High-Pass / Low-Pass (100–8000 Hz) |
-| モデル自動切替 | VRAM が足りない場合は `medium` → `small` |
-| 断片処理 | 300 秒ごとに分割して並列推論も容易 |
-| 出力 | `xxx.json` + `xxx.txt`（タイムタグ付き） |
+---
 
-## Usage
+## 🚀 クイックスタート
 
-1. Google Drive に音声をアップロード  
-2. Colab で `SRC_PATH` を書き換えて **Runtime ▸ Run all**  
+### 1) Colab で試す
 
-**ローカル実行**（GPU/CPU 共通）
+1. 上の **Open In Colab** バッジをクリック
+2. セル先頭で `SRC_PATH` を自分の音声ファイルに変更
+3. **Runtime ▸ Run all** を実行
+4. `/content` に `.json` と `.txt` が保存されます
+
+### 2) ローカル CLI で使う
+
+> **前提**: システムに `ffmpeg` がインストールされていること。未導入の場合は `brew install ffmpeg` (macOS) または `apt-get install ffmpeg` (Debian 系 Linux) などで導入してください。
 
 ```bash
-git clone https://github.com/<user>/whisper-colab-transcribe.git
-cd whisper-colab-transcribe
-pip install -r requirements.txt
-python transcribe.py --src ./sample.wav --model medium --seg 300
+# 依存ライブラリをインストール (CUDA に合わせて torch を追加しても OK)
+$ pip install -r requirements.txt
+
+# 標準設定 (model=medium, seg=300)
+$ python transcribe.py ~/audio.m4a
+
+# オプション指定
+$ python transcribe.py in.wav -m small -s 600 -o out/meeting -v
+```
+
+| 主要オプション         | デフォルト    | 説明                                             |
+| --------------- | -------- | ---------------------------------------------- |
+| `-m, --model`   | `medium` | Whisper モデル名 (`tiny`/`small`/`medium`/`large`) |
+| `-d, --device`  | auto     | 使用デバイス (`cuda` / `cpu`)                        |
+| `-s, --seg`     | `300`    | 分割長 (秒)                                        |
+| `-o, --out`     | ―        | 出力ファイル名ベース (`.json`/`.txt` は自動付与)              |
+| `-v, --verbose` | off      | FFmpeg/FFprobe の stderr を表示                    |
+
+---
+
+## 📂 プロジェクト構成
+
+```text
+whisper-colab-transcribe/
+├── transcribe.py            # メインスクリプト (GPU/CPU 共通)
+├── colab_notebook.ipynb     # Colab デモ
+├── requirements.txt         # 最小依存
+├── README.md                # ← 本ファイル
+├── LICENSE                  # MIT
+```
+
+---
+
+## 💡 Tips
+
+* **GPU なのに CPU で実行される場合**
+
+  * `nvidia-smi` で空き VRAM を確認し、足りなければ `-m small` を指定します。
+  * それでも GPU が使われない場合は `--verbose` で詳細ログを確認し、CUDA の初期化エラーなどをチェックしてください。
+
+* **`ffprobe error`**\*\* が出る場合\*\*
+
+  * `ffmpeg`/`ffprobe` が未インストール、または PATH が通っていない可能性があります。
+  * 例: macOS なら `brew install ffmpeg`、Ubuntu なら `sudo apt install ffmpeg` で導入できます。
+
+* **長時間ファイル (> 1h) を高速処理したい場合**
+
+  * `-s` を短く設定し、複数プロセスや複数 GPU で `transcribe.py` を並列実行すると処理が速くなります。
+
+---
+
+## 📝 ライセンス
+
+本リポジトリは **MIT License** の下で公開されています。詳細は [LICENSE](LICENSE) を参照してください。
+
+---
