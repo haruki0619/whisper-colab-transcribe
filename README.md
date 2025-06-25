@@ -69,4 +69,4 @@ CPU でも動作しますが、推論速度が 5〜10 倍ほど遅くなりま�
 
 ## ライセンス
 
-MIT License © 2025 Your Name
+MIT License © 2025 haruki0619
