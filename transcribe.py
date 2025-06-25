@@ -24,7 +24,7 @@ warnings.filterwarnings('ignore')  # 警告表示をオフ
 # 3) ★ ユーザが変更するパラメータ ★ -------------------------
 SRC_PATH    = ''  # 文字起こししたい音声/動画
 MODEL_NAME  = 'small'     # tiny / base / small / medium / large
-SEG_LEN_SEC = 300         # 分割長（秒）0 なら全体を一気に処理
+SEG_LEN_SEC = 10         # 分割長（秒）0 なら全体を一気に処理
 HIGH_PASS   = 100         # ハイパス (Hz) : 低域ノイズをカット
 LOW_PASS    = 8000        # ローパス (Hz) : 高域ノイズをカット
 DEVICE      = 'cuda' if torch.cuda.is_available() else 'cpu'
